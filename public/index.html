@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>三级联动菜单</title>
+</head>
+<body>
+<script src="js/jquery-1.12.4.js"></script>
+<select id="province">
+    <option value="">请选择省份</option>
+</select>&nbsp;省&nbsp;
+<select id="city">
+    <option value="">请选择市</option>
+</select>&nbsp;市&nbsp;
+<select id="county">
+    <option value="">请选择区/县</option>
+</select>&nbsp;区/县&nbsp;
+<script>
+    $(function(){
+       let $province=$('#province');
+       let $city=$('#city');
+       let $county=$('#county');
+       $.get('http://localhost:3000/getAllProvince',(result)=>{
+           let {state,data}=result;
+           let html='';
+           if(state===1){
+               data.forEach((item)=>{
+                   html+=`<option value="${item.province}">${item.name}</option>`;
+               });
+               $province.append(html);
+           }else{
+               alert(result.err);
+           }
+       });
+       $province.change(function () {
+           $city.html('<option value="">请选择市</option>');
+           $county.html('<option value="">请选择区/县</option>');
+           let province=this.value;
+           if(!province){
+               return ;
+           }
+           $.get('http://localhost:3000/getCitiesByProvince',{province},(result)=>{
+               let {state,data} =result;
+               let html='';
+               if(state===1){
+                   data.forEach((item)=>{
+                       html+=`<option value="${item.city}">${item.name}</option>`;
+                   });
+                   $city.append(html);
+               }else{
+                   alert(result.err);
+               }
+           });
+       });
+       $city.change(function () {
+           $county.html('<option value="">请选择区/县</option>');
+           let province=$province.val();
+           let city=this.value;
+           if(!province||!city){
+               return;
+           }
+           $.get('http://localhost:3000/getCountiesByProvinceAndCity',{province,city},(result)=>{
+               let {state,data}=result;
+               let html='';
+               if(state===1){
+                   data.forEach((item)=>{
+                       html+=`<option value="${item.code}">${item.name}</option>`;
+                   });
+                   $county.append(html);
+               }else{
+                   alert(result.err);
+               }
+           });
+       });
+       $county.change(function () {
+          alert(this.value);
+       });
+    });
+</script>
+</body>
+</html>
